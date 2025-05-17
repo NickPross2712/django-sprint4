@@ -1,0 +1,3 @@
+POSTS_PER_PAGE = 5
+
+POST_ORDERING = '-pub_date'
