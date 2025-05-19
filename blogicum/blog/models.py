@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
+from .constants import COMMENT_TEXT_SNIPPET_LENGTH
+
 
 User = get_user_model()
 
@@ -140,7 +142,7 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        text_snippet = self.text[:30] if self.text else ''
+        text_snippet = self.text[:COMMENT_TEXT_SNIPPET_LENGTH]
         return (
             f'Комментарий от {self.author.username} '
             f'к посту "{self.post}" '

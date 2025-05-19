@@ -7,22 +7,14 @@ from .models import Post
 
 
 def get_posts_queryset(
-    *,
-    initial_queryset=None,
+    queryset=None,
     for_admin_or_author=False,
-    add_comment_count=False,
-    author_obj=None,
-    specific_category=None,
+    add_comment_count=True,
 ):
-    if initial_queryset is None:
+    if queryset is None:
         queryset = Post.objects.all()
-    else:
-        queryset = initial_queryset
 
     queryset = queryset.select_related('category', 'author', 'location')
-
-    if author_obj:
-        queryset = queryset.filter(author=author_obj)
 
     if not for_admin_or_author:
         queryset = queryset.filter(
@@ -30,9 +22,6 @@ def get_posts_queryset(
             is_published=True,
             category__is_published=True
         )
-
-    if specific_category:
-        queryset = queryset.filter(category=specific_category)
 
     if add_comment_count:
         queryset = queryset.annotate(comment_count=Count('comments'))

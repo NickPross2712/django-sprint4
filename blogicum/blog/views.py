@@ -4,7 +4,6 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-
 from .forms import CommentForm, PostForm, ProfileEditForm
 from .models import Category, Comment, Post
 from .services import get_paginated_queryset, get_posts_queryset
@@ -13,7 +12,7 @@ User = get_user_model()
 
 
 def index(request):
-    posts = get_posts_queryset(add_comment_count=True)
+    posts = get_posts_queryset()
 
     page_obj = get_paginated_queryset(request, posts)
 
@@ -32,12 +31,15 @@ def post_detail(request, id):
 
     post = get_object_or_404(
         queryset.filter(
-            (Q(pub_date__lte=timezone.now()) | Q(author=request.user)),
-            (Q(is_published=True) | Q(author=request.user)),
-            (Q(category__is_published=True) | Q(
-                category__isnull=True) | Q(author=request.user))
+            Q(author=request.user) | Q(pub_date__lte=timezone.now()),
+            Q(author=request.user) | Q(is_published=True),
+            (
+                Q(author=request.user)
+                | Q(category__is_published=True)
+                | Q(category__isnull=True)
+            ),
         ),
-        id=id
+        id=id,
     )
 
     comments = post.comments.select_related('author').all()
@@ -63,7 +65,7 @@ def category_posts(request, category_slug):
     initial_category_posts = category.posts.all()
 
     posts_queryset = get_posts_queryset(
-        initial_queryset=initial_category_posts,
+        queryset=initial_category_posts,
         add_comment_count=True,
     )
 
@@ -79,24 +81,18 @@ def category_posts(request, category_slug):
 
 def user_profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-
     form = None
     edit_mode = False
+    posts_queryset = profile_user.posts.all()
 
     if request.user == profile_user:
         form = ProfileEditForm(instance=profile_user)
         edit_mode = True
 
-        posts = get_posts_queryset(
-            for_admin_or_author=True,
-            author_obj=profile_user,
-            add_comment_count=True
-        )
-    else:
-        posts = get_posts_queryset(
-            author_obj=profile_user,
-            add_comment_count=True
-        )
+    posts = get_posts_queryset(
+        queryset=posts_queryset,
+        for_admin_or_author=request.user == profile_user,
+    )
 
     page_obj = get_paginated_queryset(request, posts)
 
@@ -104,7 +100,7 @@ def user_profile(request, username):
         'profile': profile_user,
         'page_obj': page_obj,
         'form': form,
-        'edit_mode': edit_mode
+        'edit_mode': edit_mode,
     }
     return render(request, 'blog/profile.html', context)
 
@@ -126,15 +122,13 @@ def user_profile_edit(request):
 
 @login_required
 def create_post(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('blog:profile', username=request.user.username)
-    else:
-        form = PostForm()
+    form = PostForm(request.POST or None, request.FILES or None)
+
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.save()
+        return redirect('blog:profile', username=request.user.username)
 
     return render(request, 'blog/create.html', {'form': form})
 

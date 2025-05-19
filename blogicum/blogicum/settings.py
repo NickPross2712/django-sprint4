@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-from django.urls import reverse_lazy
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -109,4 +107,4 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-LOGIN_URL = reverse_lazy('login')
+LOGIN_URL = 'login'
