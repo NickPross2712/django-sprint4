@@ -100,6 +100,11 @@ class Post(PublishedCreatedModel):
         null=True,
         help_text='Загрузите изображение для публикации',
     )
+    is_published = models.BooleanField(
+        'Опубликовано',
+        default=True,
+        help_text='Снимите галочку, чтобы скрыть пост'
+    )
 
     class Meta:
         verbose_name = 'публикация'
@@ -112,14 +117,33 @@ class Post(PublishedCreatedModel):
 
 class Comment(models.Model):
     post = models.ForeignKey(
-        Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    text = models.TextField()
-    created_date = models.DateTimeField(auto_now_add=True)
+        Post,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Пост'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='comments'
+    )
+    text = models.TextField('Текст комментария')
+    created_date = models.DateTimeField(
+        'Дата создания',
+        auto_now_add=True
+    )
 
     class Meta:
         ordering = ['created_date']
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return (f'Комментарий от {self.author.username} '
-                f'к посту "{self.post.title}"')
+        text_snippet = self.text[:30] if self.text else ''
+        return (
+            f'Комментарий от {self.author.username} '
+            f'к посту "{self.post}" '
+            f'от {self.created_date.strftime("%Y-%m-%d %H:%M")} '
+            f'Текст: "{text_snippet}..."'
+        )
