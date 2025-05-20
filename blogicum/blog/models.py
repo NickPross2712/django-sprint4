@@ -102,11 +102,11 @@ class Post(PublishedCreatedModel):
         null=True,
         help_text='Загрузите изображение для публикации',
     )
-    is_published = models.BooleanField(
-        'Опубликовано',
-        default=True,
-        help_text='Снимите галочку, чтобы скрыть пост'
-    )
+    # is_published = models.BooleanField(
+    #     'Опубликовано',
+    #     default=True,
+    #     help_text='Снимите галочку, чтобы скрыть пост'
+    # )
 
     class Meta:
         verbose_name = 'публикация'

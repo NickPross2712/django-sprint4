@@ -31,15 +31,13 @@ def post_detail(request, id):
 
     post = get_object_or_404(
         queryset.filter(
-            Q(author=request.user) | Q(pub_date__lte=timezone.now()),
-            Q(author=request.user) | Q(is_published=True),
-            (
-                Q(author=request.user)
-                | Q(category__is_published=True)
-                | Q(category__isnull=True)
+            Q(author_id=request.user.id) | Q(
+                category__is_published=True,
+                is_published=True,
+                pub_date__lt=timezone.now()
             ),
-        ),
-        id=id,
+            id=id
+        )
     )
 
     comments = post.comments.select_related('author').all()
@@ -81,13 +79,7 @@ def category_posts(request, category_slug):
 
 def user_profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    form = None
-    edit_mode = False
     posts_queryset = profile_user.posts.all()
-
-    if request.user == profile_user:
-        form = ProfileEditForm(instance=profile_user)
-        edit_mode = True
 
     posts = get_posts_queryset(
         queryset=posts_queryset,
@@ -99,8 +91,6 @@ def user_profile(request, username):
     context = {
         'profile': profile_user,
         'page_obj': page_obj,
-        'form': form,
-        'edit_mode': edit_mode,
     }
     return render(request, 'blog/profile.html', context)
 
