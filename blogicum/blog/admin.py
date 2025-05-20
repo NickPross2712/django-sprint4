@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .constants import COMMENT_ADMIN_TEXT_SHORT_LENGTH
 from .models import Category, Comment, Location, Post
 
 
